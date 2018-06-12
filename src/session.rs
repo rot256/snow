@@ -205,6 +205,13 @@ impl Session {
             _ => Ok(self)
         }
     }
+
+    pub fn export(&mut self) -> Option<([u8; 32], [u8; 32])> {
+        match self {
+            Session::Handshake(session) => Some(session.export()),
+            _ => None,
+        }
+    }
 }
 
 impl Into<Session> for HandshakeState {

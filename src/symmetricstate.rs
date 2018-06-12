@@ -14,6 +14,7 @@ pub trait SymmetricStateType {
     fn encrypt_and_mix_hash(&mut self, plaintext: &[u8], out: &mut [u8]) -> usize;
     fn decrypt_and_mix_hash(&mut self, data: &[u8], out: &mut [u8]) -> Result<usize, ()>;
     fn split(&mut self, child1: &mut CipherState, child2: &mut CipherState);
+    fn export(&mut self) -> ([u8; 32], [u8; 32]);
 }
 
 pub struct SymmetricState {
@@ -127,6 +128,25 @@ impl SymmetricStateType for SymmetricState {
                          &mut []);
         child1.set(&hkdf_output.0[..CIPHERKEYLEN], 0);
         child2.set(&hkdf_output.1[..CIPHERKEYLEN], 0);
+    }
+
+    /* TODO: Export API */
+
+    fn export(&mut self) -> ([u8; 32], [u8; 32]) {
+        let hash_len = self.hasher.hash_len();
+        let mut hkdf_output = ([0u8; MAXHASHLEN], [0u8; MAXHASHLEN]);
+        self.hasher.hkdf(&self.ck[..hash_len], &[0u8; 0], 2,
+                         &mut hkdf_output.0,
+                         &mut hkdf_output.1,
+                         &mut []);
+
+        // truncate
+
+        let mut k1 = [0; 32];
+        let mut k2 = [0; 32];
+        k1.copy_from_slice(&hkdf_output.0[..32]);
+        k2.copy_from_slice(&hkdf_output.1[..32]);
+        (k1, k2)
     }
 
 }

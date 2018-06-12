@@ -97,13 +97,13 @@ impl HandshakeState {
         }
 
         Ok(HandshakeState {
-            rng: rng,  
+            rng: rng,
             symmetricstate: symmetricstate,
             cipherstates: cipherstates,
             s: s,
             e: e,
             fixed_ephemeral: fixed_ephemeral,
-            rs: rs, 
+            rs: rs,
             re: re,
             initiator: initiator,
             params: params,
@@ -142,7 +142,7 @@ impl HandshakeState {
     }
 
     pub fn write_handshake_message(&mut self,
-                         payload: &[u8], 
+                         payload: &[u8],
                          message: &mut [u8]) -> Result<usize, Error> {
         if !self.my_turn {
             bail!(SnowError::State{ reason: StateProblem::NotTurnToWrite });
@@ -219,7 +219,7 @@ impl HandshakeState {
     }
 
     pub fn read_handshake_message(&mut self,
-                        message: &[u8], 
+                        message: &[u8],
                         payload: &mut [u8]) -> Result<usize, Error> {
         if message.len() > MAXMSGLEN {
             bail!(SnowError::Input);
@@ -295,9 +295,13 @@ impl HandshakeState {
 
         Ok(())
     }
- 
+
     pub fn get_remote_static(&self) -> Option<&[u8]> {
         self.rs.as_option_ref().map(|rs| &rs[..self.dh_len()])
+    }
+
+    pub fn export(&mut self) -> ([u8; 32], [u8; 32]) {
+        self.symmetricstate.export()
     }
 
     pub fn finish(self) -> Result<(CipherStates, HandshakeChoice, usize, Toggle<[u8; MAXDHLEN]>), Error> {
